@@ -12,13 +12,13 @@
 
 ## 1 spark 概述
 
-![image-20210603103034344](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603103034344.png)
+![image-20210603103034344](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603103034344.png)
 
 ​	<font color=red>**Spark 是一种基于内存的快速、通用、可扩展的大数据分析计算引擎。**</font>
 
 ### spark核心模块
 
-![image-20210603105328924](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603105328924.png)
+![image-20210603105328924](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603105328924.png)
 
 - Spark 是一种由 Scala 语言开发的快速、通用、可扩展的大数据分析引擎
 - Spark Core 中提供了 Spark 最基础与最核心的功能，Spark 其他的功能如：Spark SQL，Spark Streaming，GraphX, MLlib 都是在 Spark Core 的基础上进行扩展的
@@ -44,7 +44,7 @@
 
 ### 1.2 运行架构
 
-![image-20210603112341556](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603112341556.png)
+![image-20210603112341556](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603112341556.png)
 
 Spark 框架的核心是一个计算引擎，整体来说，它采用了标准 master-slave 的结构。
 如上图所示，它展示了一个 Spark 执行时的基本结构。图形中的 Driver 表示 master，
@@ -107,7 +107,7 @@ Spark 框架的核心是一个计算引擎，整体来说，它采用了标准 m
 
 - **有向无环图（DAG）**
 
-  ![image-20210603114516269](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603114516269.png)
+  ![image-20210603114516269](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603114516269.png)
 
 ## 2 Spark Core
 
@@ -220,7 +220,7 @@ RDD 任务切分中间分为：Application、Job、Stage 和 Task
   
   ```
 
-  ![image-20210603150815199](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603150815199.png)
+  ![image-20210603150815199](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603150815199.png)
 
 缓存有可能丢失，或者存储于内存的数据由于内存不足而被删除，RDD 的缓存容错机制保证了即使缓存丢失也能保证计算的正确执行。通过基于 RDD 的一系列转换，丢失的数据会被重算，由于 RDD 的各个 Partition 是相对独立的，因此只需要计算丢失的部分即可，并不需要重算全部 Partition。Spark 会自动对一些 Shuffle 操作的中间数据做持久化操作(比如：reduceByKey)。这样做的目的是为了当一个节点 Shuffle 失败了避免重新计算整个输入。但是，在实际使用的时候，如果想重用数据，仍然建议调用 persist 或 cache。
 
@@ -428,39 +428,31 @@ Spark SQL 是 Spark 用于结构化数据(structured data)处理的 Spark 模块
 
   无缝的整合了 SQL 查询和 Spark 编程
 
-  ![image-20210603160217382](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603160217382.png)
+  ![image-20210603160217382](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603160217382.png)
 
 - **统一的数据访问**
 
   使用相同的方式连接不同的数据源
 
-  ![image-20210603160146885](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603160146885.png)
-
-  
-
-  
+  ![image-20210603160146885](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603160146885.png)
 
 - **兼容 Hive**
 
   在已有的仓库上直接运行 SQL 或者 HiveQL 	
 
-  ![image-20210603160445272](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603160445272.png)
+  ![image-20210603160445272](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603160445272.png)
 
 - **标准数据连接**
 
   通过 JDBC 或者 ODBC 来连接
 
-  ![image-20210603160512163](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603160512163.png)
-
-  
-
-  
+  ![image-20210603160512163](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603160512163.png)
 
 - **DataFrame**
 
 在 Spark 中，DataFrame 是一种以 RDD 为基础的分布式数据集，类似于传统数据库中的二维表格。DataFrame 与 RDD 的主要区别在于，前者带有 schema 元信息，即 DataFrame所表示的二维表数据集的每一列都带有名称和类型。这使得 Spark SQL 得以洞察更多的结构信息，从而对藏于 DataFrame 背后的数据源以及作用于 DataFrame 之上的变换进行了针对性的优化，最终达到大幅提升运行时效率的目标。反观 RDD，由于无从得知所存数据元素的具体内部结构，Spark Core 只能在 stage 层面进行简单、通用的流水线优化。同时，与 Hive 类似，DataFrame 也支持嵌套数据类型（struct、array 和 map）。从 API 易用性的角度上看，DataFrame API 提供的是一套高层的关系操作，比函数式的 RDD API 要更加友好，门槛更低。
 
-![image-20210603161217059](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603161217059.png)
+![image-20210603161217059](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603161217059.png)
 
 上图直观地体现了 DataFrame 和 RDD 的区别.
 
@@ -627,7 +619,7 @@ DataSet 是具有强类型的数据集合，需要提供对应的类型信息。
   - Dataset 和 DataFrame 拥有完全相同的成员函数，区别只是每一行的数据类型不同。DataFrame 其实就是 DataSet 的一个特例 type DataFrame = Dataset[Row]
   - DataFrame 也可以叫 Dataset[Row],每一行的类型是 Row，不解析，每一行究竟有哪些字段，各个字段又是什么类型都无从得知，只能用上面提到的 getAS 方法或者共性中的第七条提到的模式匹配拿出特定字段。而 Dataset 中，每一行是什么类型是不一定的，在自定义了 case class 之后可以很自由的获得每一行的信息
 
-  ![image-20210603174731857](https://github.com/kexiyigeren/zqh-learn/blob/main/resource/images/image-20210603174731857.png)
+  ![image-20210603174731857](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210603174731857.png)
 
 ## 4 Spark Streaming
 
