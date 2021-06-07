@@ -1,3 +1,5 @@
+
+
 # Spark篇
 
 
@@ -623,3 +625,127 @@ DataSet 是具有强类型的数据集合，需要提供对应的类型信息。
 
 ## 4 Spark Streaming
 
+#### 概述
+
+![image-20210604175107762](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210604175107762.png)
+
+**Spark 流使得构建可扩展的容错流应用程序变得更加容易**
+
+Spark Streaming 用于流式数据的处理。Spark Streaming 支持的数据输入源很多，例如：Kafka、Flume、Twitter、ZeroMQ 和简单的 TCP 套接字等等。数据输入后可以用 Spark 的高度抽象原语如：map、reduce、join、window 等进行运算。而结果也能保存在很多地方，如 HDFS，数据库等。
+
+![image-20210604175330375](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210604175330375.png)
+
+和 Spark 基于 RDD 的概念很相似，Spark Streaming 使用离散化流(discretized stream)作为抽象表示，叫作 DStream。DStream 是随时间推移而收到的数据的序列。在内部，每个时间区间收到的数据都作为 RDD 存在，而 DStream 是由这些 RDD 所组成的序列(因此得名“离散化”)。所以简单来将，DStream 就是对 RDD 在实时数据处理场景的一种封装。
+
+**Spark Streaming 的特点**
+
+- **易用**
+
+![image-20210604175525889](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210604175525889.png)
+
+- **容错**
+
+  ![image-20210604175620402](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210604175620402.png)
+
+- **易整合到 Spark 体系**
+
+  ![image-20210604175654553](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210604175654553.png)
+
+**Spark Streaming 架构**
+
+![image-20210604180203164](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20210604180203164.png)
+
+#### 数据源
+
+##### kafka
+
+DirectAPI：是由计算的 Executor 来主动消费 Kafka 的数据，速度由自身控制.
+
+
+
+##### 优雅关闭
+
+流式任务需要 7*24 小时执行，但是有时涉及到升级代码需要主动停止程序，但是分
+布式程序，没办法做到一个个进程去杀死，所有配置优雅的关闭就显得至关重要了。
+一般有三种思路：
+
+- **人工手动停止**
+
+- **获取第三方系统做消息通知** (https://www.it610.com/article/1283415083795365888.htm)
+
+  定时的获取第三方系统（hdfs,reids、zk、hbase、db等，我这里用的是 hdfs）的标识，如果需要停止，调用StreamContext对象stop（true,true）方法，自己优雅的终止自己.唯一的问题就是依赖了外部的一个存储系统来达到消息通知的目的。
+
+  MonitorStop
+
+  ```scala
+  import java.net.URI
+  import org.apache.hadoop.conf.Configuration
+  import org.apache.hadoop.fs.{FileSystem, Path}
+  import org.apache.spark.streaming.{StreamingContext, StreamingContextState}
+  class MonitorStop(ssc: StreamingContext) extends Runnable {
+   override def run(): Unit = {
+   val fs: FileSystem = FileSystem.get(new URI("hdfs://linux1:9000"), new 
+  Configuration(), "atguigu")
+   while (true) {
+   try
+   Thread.sleep(5000)
+   catch {
+   case e: InterruptedException =>
+   e.printStackTrace()
+   }
+   val state: StreamingContextState = ssc.getState
+   val bool: Boolean = fs.exists(new Path("hdfs://linux1:9000/stopSpark"))
+   if (bool) {
+   if (state == StreamingContextState.ACTIVE) {
+   ssc.stop(stopSparkContext = true, stopGracefully = true)
+   System.exit(0)
+   }
+   }
+   }
+   }
+  }
+  ➢ SparkTest
+  ```
+
+  SparkTest
+
+  ```scala
+  import org.apache.spark.SparkConf
+  import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
+  import org.apache.spark.streaming.{Seconds, StreamingContext}
+  object SparkTest {
+   def createSSC(): _root_.org.apache.spark.streaming.StreamingContext = {
+   val update: (Seq[Int], Option[Int]) => Some[Int] = (values: Seq[Int], status: 
+  Option[Int]) => {
+   //当前批次内容的计算
+   val sum: Int = values.sum
+   //取出状态信息中上一次状态
+   val lastStatu: Int = status.getOrElse(0)
+   Some(sum + lastStatu)
+   }
+   val sparkConf: SparkConf = new 
+  SparkConf().setMaster("local[4]").setAppName("SparkTest")
+   //设置优雅的关闭
+   sparkConf.set("spark.streaming.stopGracefullyOnShutdown", "true")
+   val ssc = new StreamingContext(sparkConf, Seconds(5))
+   ssc.checkpoint("./ck")
+   val line: ReceiverInputDStream[String] = ssc.socketTextStream("linux1", 9999)
+   val word: DStream[String] = line.flatMap(_.split(" "))
+   val wordAndOne: DStream[(String, Int)] = word.map((_, 1))
+   val wordAndCount: DStream[(String, Int)] = wordAndOne.updateStateByKey(update)
+   wordAndCount.print()
+   ssc
+   }
+   def main(args: Array[String]): Unit = {
+   val ssc: StreamingContext = StreamingContext.getActiveOrCreate("./ck", () => 
+  createSSC())
+   new Thread(new MonitorStop(ssc)).start()
+   ssc.start()
+   ssc.awaitTermination()
+   }
+  }
+  ```
+
+  
+
+- **内部暴露一个socket或者http端口用来接收请求，等待除法关闭流程序**
