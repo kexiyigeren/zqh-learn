@@ -704,11 +704,10 @@ DirectAPI：是由计算的 Executor 来主动消费 Kafka 的数据，速度由
    }
    }
   }
-  ➢ SparkTest
   ```
-
+  
   SparkTest
-
+  
   ```scala
   import org.apache.spark.SparkConf
   import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
@@ -745,7 +744,7 @@ DirectAPI：是由计算的 Executor 来主动消费 Kafka 的数据，速度由
    }
   }
   ```
-
   
-
+  
+  
 - **内部暴露一个socket或者http端口用来接收请求，等待除法关闭流程序**
