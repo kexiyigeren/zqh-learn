@@ -121,9 +121,7 @@ Spark 计算框架为了能够进行高并发和高吞吐的数据处理，封�
 
 ### 2.1 RDD
 
-RDD（Resilient Distributed Dataset）叫做弹性分布式数据集，是 Spark 中最基本的数据
-处理模型。代码中是一个抽象类，它代表一个弹性的、不可变、可分区、里面的元素可并行
-计算的集合。
+RDD（Resilient Distributed Dataset）叫做弹性分布式数据集，是 Spark 中最基本的数据处理模型。代码中是一个抽象类，它代表一个弹性的、不可变、可分区、里面的元素可并行计算的集合。
 
 - 弹性
   - 存储的弹性：内存与磁盘的自动切换
@@ -234,8 +232,7 @@ RDD 任务切分中间分为：Application、Job、Stage 和 Task
 
   - Cache 缓存只是将数据保存起来，不切断血缘依赖。Checkpoint 检查点切断血缘依赖。
   - Cache 缓存的数据通常存储在磁盘、内存等地方，可靠性低。Checkpoint 的数据通常存储在 HDFS 等容错、高可用的文件系统，可靠性高。
-  - 建议对 checkpoint()的 RDD 使用 Cache 缓存，这样 checkpoint 的 job 只需从 Cache 缓存
-    中读取数据即可，否则需要再从头计算一次 RDD。
+  - 建议对 checkpoint()的 RDD 使用 Cache 缓存，这样 checkpoint 的 job 只需从 Cache 缓存中读取数据即可，否则需要再从头计算一次 RDD。
 
 ##### RDD 分区器
 
@@ -351,16 +348,15 @@ Spark 的数据读取及数据保存可以从两个维度来作区分：文件�
 
 - **sequence 文件**
 
-  SequenceFile 文件是 Hadoop 用来存储二进制形式的 key-value 对而设计的一种平面文件(Flat 
-  File)。在 SparkContext 中，可以调用 sequenceFile[keyClass, valueClass](path)。
-
+  SequenceFile 文件是 Hadoop 用来存储二进制形式的 key-value 对而设计的一种平面文件(Flat File)。在 SparkContext 中，可以调用 sequenceFile[keyClass, valueClass](path)。
+  
   ```scala
   // 保存数据为 SequenceFile
   dataRDD.saveAsSequenceFile("output")
   // 读取 SequenceFile 文件
   sc.sequenceFile[Int,Int]("output").collect().foreach(println)
   ```
-
+  
 - **object 对象文件**
 
   对象文件是将对象序列化后保存的文件，采用 Java 的序列化机制。可以通过 objectFile[T: ClassTag](path)函数接收一个路径，读取对象文件，返回对应的 RDD，也可以通过调用saveAsObjectFile()实现对对象文件的输出。因为是序列化所以要指定类型。
@@ -748,3 +744,25 @@ DirectAPI：是由计算的 Executor 来主动消费 Kafka 的数据，速度由
   
   
 - **内部暴露一个socket或者http端口用来接收请求，等待除法关闭流程序**
+
+## 5 Spark调优、性能优化
+
+### 5.1 Explain 查看执行计划
+
+```scala
+.explain(mode="xxx")
+```
+
+从 3.0 开始，explain 方法有一个新的参数 mode，该参数可以指定执行计划展示格式：
+explain(mode="simple")：只展示物理执行计划。
+explain(mode="extended")：展示物理执行计划和逻辑执行计划。
+explain(mode="codegen") ：展示要 Codegen 生成的可执行 Java 代码。
+explain(mode="cost")：展示优化后的逻辑执行计划以及相关的统计。
+explain(mode="formatted")：以分隔的方式输出，它会输出更易读的物理执行计划，并展示每个节点的详细信息。
+
+核心的执行过程一共有 5 个步骤：
+
+![image-20211125113913355](https://gitee.com/zhengqianhua0314/image-store/raw/master/image-20211125113913355.png)
+
+### 5.2 资源调优
+

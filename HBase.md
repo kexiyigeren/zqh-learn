@@ -48,7 +48,7 @@ HBase是一种分布式、可扩展、支持海量数据存储的NoSQL数据库.
 
 **架构角色：**
 
-- **Region** **Server**
+- **Region Server**
 
   Region Server为 Region的管理者，其实现类为HRegionServer，主要作用如下:
 
@@ -880,7 +880,7 @@ Phoenix是HBase的开源SQL皮肤。可以使用标准JDBC API代替HBase客户�
 
 ##### Phoenix JDBC操作
 
-1. **启动query erver**
+1. **启动query server**
 
    ```sh
    $ queryserver.py start
